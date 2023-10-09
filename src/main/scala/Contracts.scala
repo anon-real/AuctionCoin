@@ -24,9 +24,11 @@ object Contracts {
   val buyBack: String =
     """{
       |  val MaxMinerFee = 10000000L
-      |  val teamFee = 3 // in percent
+      |  val teamFee = 2 // in percent
       |  val lpBox = INPUTS(0)
       |  val acBox = INPUTS(1)
+      |
+      |  val successfulAuction = acBox.tokens.size == 0
       |
       |  val outAc = OUTPUTS(1)
       |  val teamOut = OUTPUTS(2)
@@ -49,7 +51,17 @@ object Contracts {
       |  val rightTeamOut = teamOut.value == (SELF.value * teamFee) / 100
       |  val rightTeamBox = teamOut.propositionBytes == TEAM_ADDRESS && rightTeamOut
       |
-      |  sigmaProp(rightAcBox && rightOutAc && rightLpBox && rightTeamBox && INPUTS.size == 3)
+      |  val buyBack = successfulAuction && rightOutAc && rightLpBox && rightTeamBox && INPUTS.size == 3
+      |
+      |  val failedAuction = {
+      |    val toReturn = SELF.tokens(0)
+      |    val rightTok = toReturn._1 == acBox.tokens(1)._1
+      |    val addToAc = OUTPUTS(0).tokens(0)._1 == NFT && OUTPUTS(0).tokens(1)._2 == ac._2 + toReturn._2 &&
+      |                   OUTPUTS(0).value >= acBox.value + SELF.value - MaxMinerFee
+      |    rightTok && addToAc && INPUTS.size == 2
+      |  }
+      |
+      |  sigmaProp((buyBack || failedAuction) && rightAcBox)
       |}""".stripMargin
 
 
