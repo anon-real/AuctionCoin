@@ -1,26 +1,5 @@
 object Contracts {
-  //  this contains ergo script contracts
-  //  needed contracts
-  //  1. main contract that:
-  //    - contains the coins
-  //    - accepts coins that have failed to be sold in auction
-  //    - starts different kinds of auctions periodically
-
-  //  2. sold contract that:
-  //    - contains ERGs that have been earned from an auction
-  //    - buys back the coins from LP (how to include randomness?)
-  //    - sends the coins to the main contract (either failed auctions or bought back coins)
-
-
-  //  here is the auction required registers
-  //  - R4: seller ergo tree: Coll[Byte]
-  //  - R5: start time, end time, (Long, Long)
-  //  - R6 timed: min price, step, instantBuyAm: Coll[Long]
-  //  - R6 fixed: min price, decline price, decline period
-  //  - R7: currency ID, empty in case of ERG: Coll[Byte]
-  //  - R8: bidder ergo tree: Coll[Byte]
-
-
+  
   val buyBack: String =
     """{
       |  // we could pay less fee (e.g., 1e6) and add the rest to AC box to ensure it can create auction boxes
