@@ -105,7 +105,7 @@ object Contracts {
       |
       |    val aucOut = OUTPUTS(ind + 1)
       |    val rightContract = blake2b256(aucOut.propositionBytes) == AuctionContractHash
-      |    val rightTokens = aucOut.tokens(1)._1 == coinId && aucOut.tokens(1)._2 == numToAuction
+      |    val rightTokens = aucOut.tokens(0)._1 == coinId && aucOut.tokens(0)._2 == numToAuction
       |    val aucSt = curTime + (HOUR/2)
       |    val aucEnd = aucSt + period
       |    val lpErg = lpBox.value
