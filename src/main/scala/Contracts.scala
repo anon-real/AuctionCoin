@@ -133,7 +133,7 @@ object Contracts {
       |    val okayTokens = selfOut.tokens(0) == NFT && selfOut.tokens(1)._1 == coinId && selfOut.tokens(1)._2 >= coinAm
       |    val keepRegisters = selfOut.R4[Coll[Long]].get == SELF.R4[Coll[Long]].get &&
       |                         selfOut.R5[Coll[Coll[Long]]].get == SELF.R5[Coll[Coll[Long]]].get
-      |    val sameVal = selfOut.value == SELF.value
+      |    val sameVal = selfOut.value >= SELF.value
       |    val sameScript = selfOut.propositionBytes == SELF.propositionBytes
       |    okayTokens && keepRegisters && sameVal && sameScript
       |  }
