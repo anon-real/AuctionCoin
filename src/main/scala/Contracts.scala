@@ -87,11 +87,12 @@ object Contracts {
       |
       |  // list of auctions to start. for example we can start a batch of 5 auctions with different parameters every 3 days.
       |  val auctionInfo = SELF.R5[Coll[Coll[Long]]].get
-      |  val NFT = SELF.tokens(0)
-      |  val coin = SELF.tokens(1)
+      |  val NFT = SELF.tokens(0) // AC NFT
+      |  val coin = SELF.tokens(1) // AC itself
       |  val coinId = coin._1
       |  val coinAm = coin._2
       |
+      |  // check all auctions to be started correctly
       |  val allOkay = auctionInfo.indices.forall({(ind: Int) => {
       |    val auction = auctionInfo(ind)
       |    val numToAuction = auction(0)
