@@ -1,5 +1,5 @@
 object Contracts {
-  
+
   val buyBack: String =
     """{
       |  // we could pay less fee (e.g., 1e6) and add the rest to AC box to ensure it can create auction boxes
@@ -35,6 +35,7 @@ object Contracts {
       |
       |  val buyBack = successfulAuction && rightOutAc && rightLpBox && rightTeamBox && INPUTS.size == 3
       |
+      |  // we return the tokens to AC box
       |  val failedAuction = {
       |    val toReturn = SELF.tokens(0)
       |    val rightTok = toReturn._1 == acBox.tokens(1)._1
