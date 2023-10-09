@@ -58,7 +58,7 @@ object Contracts {
       |    val rightTok = toReturn._1 == acBox.tokens(1)._1
       |    val addToAc = OUTPUTS(0).tokens(0)._1 == NFT && OUTPUTS(0).tokens(1)._2 == ac._2 + toReturn._2 &&
       |                   OUTPUTS(0).value >= acBox.value + SELF.value - MaxMinerFee
-      |    rightTok && addToAc && INPUTS.size == 2
+      |    rightTok && addToAc && INPUTS.size == 2 && !successfulAuction
       |  }
       |
       |  sigmaProp((buyBack || failedAuction) && rightAcBox)
