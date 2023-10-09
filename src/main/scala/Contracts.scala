@@ -67,9 +67,12 @@ object Contracts {
 
   val main: String =
     """{
-      |  // tokens: NFT, coin
+      |  // tokens: AC NFT, coins
       |  // R4: Coll[Long] - [prevEpoch, freq]
       |  // auction will start from coef * LP price to LP price (coef is larger than 1)
+      |
+      |  // we start decreasing price auction. The auction price will start from coef * LP price and will decrease to
+      |  // LP price in the auction period. Coef could be set to 2 for example. This makes price discovery much easier!
       |  // R5: Coll[Coll[Long]] - Auction info: [numToAuction, period, coef]
       |
       |  val HOUR = 3600000L
