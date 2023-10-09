@@ -78,10 +78,10 @@ object Contracts {
       |  // we start decreasing price auction. The auction price will start from coef * LP price and will decrease to
       |  // LP price in the auction period. Coef could be set to 2 for example. This makes price discovery much easier!
       |  // R5: Coll[Coll[Long]] - Auction info: [numCoinsToAuction, period, coef]
-      |
+      |  val MaxMinerFee = 10000000L
+      |  val auctionBoxInitialVal = 1000000L
       |  val HOUR = 3600000L
       |  val curTime = CONTEXT.preHeader.timestamp
-      |  val auctionBoxInitialVal = 1000000L
       |
       |  val lpBox = CONTEXT.dataInputs(1) // to get the price
       |
@@ -122,31 +122,30 @@ object Contracts {
       |    rightContract && rightTokens && rightRegisters && aucOut.value == auctionBoxInitialVal
       |  }})
       |
-      |  val total = auctionInfo.indices.map({(ind: Int) => {
-      |    val auction = auctionInfo(ind)
-      |    auction(1)
-      |  }}).fold(0L, {(a: Long, b: Long) => a + b})
+      |  val total = auctionInfo.indices.map({(ind: Int) => auctionInfo(ind)(0)}).fold(0L, {(a: Long, b: Long) => a + b})
       |
       |  val correctNFT = OUTPUTS(0).tokens(0) == NFT
-      |  val correctCoin = OUTPUTS(0).tokens(1)._1 == coinId && OUTPUTS(0).tokens(1)._2 == coinAm - total
+      |  val correctCoin = OUTPUTS(0).tokens(1)._1 == coinId && OUTPUTS(0).tokens(1)._2 >= coinAm - total
       |
       |  val rightRegisters = OUTPUTS(0).R4[Coll[Long]].get == Coll(prevTime + frequency, frequency) &&
       |                       OUTPUTS(0).R5[Coll[Coll[Long]]] == SELF.R5[Coll[Coll[Long]]]
       |
       |  // in case of failed auctions, we get back the tokens
+      |  val sameScript = OUTPUTS(0).propositionBytes == SELF.propositionBytes
       |  val allowAddingToken = {
       |    val selfOut = OUTPUTS(0)
       |    val okayTokens = selfOut.tokens(0) == NFT && selfOut.tokens(1)._1 == coinId && selfOut.tokens(1)._2 >= coinAm
       |    val keepRegisters = selfOut.R4[Coll[Long]] == SELF.R4[Coll[Long]] &&
       |                         selfOut.R5[Coll[Coll[Long]]] == SELF.R5[Coll[Coll[Long]]]
       |    val sameVal = selfOut.value >= SELF.value // allows adding ERGs to ensure auction creation
-      |    val sameScript = selfOut.propositionBytes == SELF.propositionBytes
-      |    okayTokens && keepRegisters && sameVal && sameScript
+      |    okayTokens && keepRegisters && sameVal
       |  }
       |
       |  val rightLpBox = lpBox.tokens(2)._1 == CONFIG_LP
-      |  val startAuctions = rightLpBox && correctNFT && correctCoin && allOkay && rightRegisters && enoughTimePassed
-      |  sigmaProp(startAuctions || allowAddingToken)
+      |  val minerFeeOkay = OUTPUTS(OUTPUTS.size - 1).value <= MaxMinerFee
+      |  val startAuctions = rightLpBox && correctNFT && correctCoin && allOkay && rightRegisters &&
+      |                        enoughTimePassed && OUTPUTS.size == auctionInfo.size + 2 && minerFeeOkay
+      |  sigmaProp((startAuctions || allowAddingToken) && sameScript)
       |}""".stripMargin
 
 
