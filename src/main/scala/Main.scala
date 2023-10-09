@@ -9,11 +9,6 @@ object Main {
   def main(args: Array[String]): Unit = {
     // use appkit to compile the contract
     ergoClient.execute(ctx => {
-      var contract = ctx.compileContract(ConstantsBuilder.create()
-        .item("CONFIG_NFT", "".getBytes())
-        .item("CONFIG_LP", "".getBytes())
-        .build(), mainContract)
-      println("Main contract address: " + addrEnc.fromProposition(contract.getErgoTree).get)
 
       val buyBackContract = ctx.compileContract(ConstantsBuilder.create()
         .item("CONFIG_LP", "".getBytes())
@@ -21,6 +16,14 @@ object Main {
         .item("ACNFT", "".getBytes())
         .build(), Contracts.buyBack)
       println("Buy back contract address: " + addrEnc.fromProposition(buyBackContract.getErgoTree).get)
+
+      var contract = ctx.compileContract(ConstantsBuilder.create()
+        .item("CONFIG_NFT", "".getBytes())
+        .item("CONFIG_LP", "".getBytes())
+        .item("AuctionContractHash", "".getBytes())
+        .item("BuyBackContractHash", "".getBytes())
+        .build(), mainContract)
+      println("Main contract address: " + addrEnc.fromProposition(contract.getErgoTree).get)
 
     })
 

@@ -71,7 +71,6 @@ object Contracts {
       |  // R4: Coll[Long] - [prevEpoch, freq]
       |  // auction will start from coef * LP price to LP price (coef is larger than 1)
       |  // R5: Coll[Coll[Long]] - Auction info: [numToAuction, period, coef]
-      |  // R6: (Coll[Byte], Coll[Byte]) - buy back contract, auction contract
       |
       |  val HOUR = 3600000L
       |  val HALFHOUR = 1800000L
@@ -88,10 +87,6 @@ object Contracts {
       |  val coinAm = coin._2
       |  val currentTime = CONTEXT.preHeader.timestamp
       |
-      |  val contracts = SELF.R4[(Coll[Byte], Coll[Byte])].get
-      |  val buyBackContract = contracts._1
-      |  val auctionContract = contracts._2
-      |
       |  val allOkay = auctionInfo.indices.forall({(ind: Int) => {
       |    val auction = auctionInfo(ind)
       |    val numToAuction = auction(0)
@@ -99,7 +94,7 @@ object Contracts {
       |    val coef = auction(2) // (coef is 1000 / actual coef)
       |
       |    val aucOut = OUTPUTS(ind + 1)
-      |    val rightContract = aucOut.propositionBytes == auctionContract
+      |    val rightContract = blake2b256(aucOut.propositionBytes) == AuctionContractHash
       |    val rightTokens = aucOut.tokens(1)._1 == coinId && aucOut.tokens(1)._2 == numToAuction
       |    val aucSt = currentTime + HALFHOUR
       |    val aucEnd = aucSt + period
@@ -110,7 +105,7 @@ object Contracts {
       |    val numDecrease = period / HOUR
       |    val amountDecrease = (stPrice - lpPrice) / numDecrease
       |
-      |    val rightRegisters = aucOut.R4[Coll[Byte]].get == buyBackContract &&
+      |    val rightRegisters = blake2b256(aucOut.R4[Coll[Byte]].get) == BuyBackContractHash &&
       |                           aucOut.R5[(Long, Long)].get == (aucSt, aucEnd) &&
       |                           aucOut.R6[Coll[Long]].get == Coll(stPrice, -amountDecrease, HOUR) &&
       |                           aucOut.R7[Coll[Byte]].get == Coll[Byte]()
@@ -128,15 +123,13 @@ object Contracts {
       |  val currentHeight = CONTEXT.preHeader.height
       |  val periodReached = CONTEXT.preHeader.height >= prevEpoch + frequency
       |  val rightRegisters = OUTPUTS(0).R4[Coll[Long]].get == Coll(prevEpoch + frequency, frequency) &&
-      |                       OUTPUTS(0).R5[Coll[Coll[Long]]] == SELF.R5[Coll[Coll[Long]]] &&
-      |                         OUTPUTS(0).R6[Coll[Byte]].get == buyBackContract
+      |                       OUTPUTS(0).R5[Coll[Coll[Long]]] == SELF.R5[Coll[Coll[Long]]]
       |
       |  val allowAddingToken = {
       |    val selfOut = OUTPUTS(1)
       |    val okayTokens = selfOut.tokens(0) == NFT && selfOut.tokens(1)._1 == coinId && selfOut.tokens(1)._2 >= coinAm
       |    val keepRegisters = selfOut.R4[Coll[Long]].get == SELF.R4[Coll[Long]].get &&
-      |                         selfOut.R5[Coll[Coll[Long]]].get == SELF.R5[Coll[Coll[Long]]].get &&
-      |                         selfOut.R6[Coll[Byte]].get == SELF.R6[Coll[Byte]].get
+      |                         selfOut.R5[Coll[Coll[Long]]].get == SELF.R5[Coll[Coll[Long]]].get
       |    val sameVal = selfOut.value == SELF.value
       |    val sameScript = selfOut.propositionBytes == SELF.propositionBytes
       |    okayTokens && keepRegisters && sameVal && sameScript
