@@ -30,7 +30,7 @@ object Contracts {
       |  val lpBox = INPUTS(0)
       |  val acBox = INPUTS(1)
       |
-      |  val successfulAuction = acBox.tokens.size == 0
+      |  val successfulAuction = SELF.tokens.size == 0
       |
       |  val outAc = OUTPUTS(1)
       |  val teamOut = OUTPUTS(2)
