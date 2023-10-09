@@ -84,7 +84,7 @@ object Contracts {
       |    val auction = auctionInfo(ind)
       |    val numToAuction = auction(0)
       |    val period = auction(1)
-      |    val coef = auction(2) // (1000 / actual_coef)
+      |    val coef = auction(2) // (coef is 1000 / actual coef)
       |
       |    val aucOut = OUTPUTS(ind + 1)
       |    val rightContract = aucOut.propositionBytes == auctionContract
