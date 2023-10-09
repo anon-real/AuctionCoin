@@ -77,15 +77,15 @@ object Contracts {
       |  // R5: Coll[Coll[Long]] - Auction info: [numCoinsToAuction, period, coef]
       |
       |  val HOUR = 3600000L
-      |  val HALFHOUR = 1800000L
+      |  val curTime = CONTEXT.preHeader.timestamp
       |
       |  val lpBox = CONTEXT.dataInputs(1) // to get the price
       |
-      |  val prevTime = SELF.R4[Coll[Long]].get(0)
+      |  val prevTime = SELF.R4[Coll[Long]].get(0) // last time we have started auctions
       |  val frequency = SELF.R4[Coll[Long]].get(1)
-      |  val curTime = CONTEXT.preHeader.timestamp
       |  val enoughTimePassed = curTime > prevTime + frequency
       |
+      |  // list of auctions to start. for example we can start a batch of 5 auctions with different parameters every 3 days.
       |  val auctionInfo = SELF.R5[Coll[Coll[Long]]].get
       |  val NFT = SELF.tokens(0)
       |  val coin = SELF.tokens(1)
@@ -101,7 +101,7 @@ object Contracts {
       |    val aucOut = OUTPUTS(ind + 1)
       |    val rightContract = blake2b256(aucOut.propositionBytes) == AuctionContractHash
       |    val rightTokens = aucOut.tokens(1)._1 == coinId && aucOut.tokens(1)._2 == numToAuction
-      |    val aucSt = curTime + HALFHOUR
+      |    val aucSt = curTime + (HOUR/2)
       |    val aucEnd = aucSt + period
       |    val lpErg = lpBox.value
       |    val lpAcAm = lpBox.tokens(2)._2
@@ -131,8 +131,8 @@ object Contracts {
       |  val allowAddingToken = {
       |    val selfOut = OUTPUTS(0)
       |    val okayTokens = selfOut.tokens(0) == NFT && selfOut.tokens(1)._1 == coinId && selfOut.tokens(1)._2 >= coinAm
-      |    val keepRegisters = selfOut.R4[Coll[Long]].get == SELF.R4[Coll[Long]].get &&
-      |                         selfOut.R5[Coll[Coll[Long]]].get == SELF.R5[Coll[Coll[Long]]].get
+      |    val keepRegisters = selfOut.R4[Coll[Long]] == SELF.R4[Coll[Long]] &&
+      |                         selfOut.R5[Coll[Coll[Long]]] == SELF.R5[Coll[Coll[Long]]]
       |    val sameVal = selfOut.value >= SELF.value
       |    val sameScript = selfOut.propositionBytes == SELF.propositionBytes
       |    okayTokens && keepRegisters && sameVal && sameScript
