@@ -38,3 +38,9 @@ WARNING: Unmatched cancel notification for request id 6
 Oct 09, 2023 2:03:25 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
 WARNING: Unmatched cancel notification for request id 25
 2023.10.09 14:03:26 WARN  no build target for: /Users/mehran/work/code/AC/src/main/scala/Contracts.scala[0m
+2023.10.09 14:04:13 WARN  no build target for: /Users/mehran/work/code/AC/src/main/scala/Contracts.scala[0m
+2023.10.09 14:04:18 WARN  no build target for: /Users/mehran/work/code/AC/src/main/scala/Contracts.scala[0m
+2023.10.09 14:04:23 WARN  no build target for: /Users/mehran/work/code/AC/src/main/scala/Contracts.scala[0m
+2023.10.09 14:04:26 WARN  no build target for: /Users/mehran/work/code/AC/src/main/scala/Contracts.scala[0m
+Oct 09, 2023 2:04:35 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 146

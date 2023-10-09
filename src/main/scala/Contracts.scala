@@ -32,6 +32,7 @@ object Contracts {
       |
       |  val successfulAuction = SELF.tokens.size == 0
       |
+      |  // OUTPUTS(0) is LP box
       |  val outAc = OUTPUTS(1)
       |  val teamOut = OUTPUTS(2)
       |
