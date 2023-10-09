@@ -48,7 +48,7 @@ object Contracts {
       |  val rightOutAc = outAc.tokens(0)._1 == NFT && outAc.tokens(1)._2 >= ac._2 + willGet
       |  val rightLpBox = lpBox.tokens(2)._1 == CONFIG_LP
       |
-      |  val rightTeamOut = teamOut.value == (SELF.value * teamFee) / 100
+      |  val rightTeamOut = teamOut.value >= (SELF.value * teamFee) / 100
       |  val rightTeamBox = teamOut.propositionBytes == TEAM_ADDRESS && rightTeamOut
       |
       |  val buyBack = successfulAuction && rightOutAc && rightLpBox && rightTeamBox && INPUTS.size == 3
