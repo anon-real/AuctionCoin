@@ -68,27 +68,29 @@ object Contracts {
   val main: String =
     """{
       |  // tokens: AC NFT, coins
-      |  // R4: Coll[Long] - [prevEpoch, freq]
-      |  // auction will start from coef * LP price to LP price (coef is larger than 1)
+      |
+      |  // we start auctions (depending on Auction info below) each freq time (in timestamp)
+      |  // R4: Coll[Long] - [prevTime, freq]
       |
       |  // we start decreasing price auction. The auction price will start from coef * LP price and will decrease to
       |  // LP price in the auction period. Coef could be set to 2 for example. This makes price discovery much easier!
-      |  // R5: Coll[Coll[Long]] - Auction info: [numToAuction, period, coef]
+      |  // R5: Coll[Coll[Long]] - Auction info: [numCoinsToAuction, period, coef]
       |
       |  val HOUR = 3600000L
       |  val HALFHOUR = 1800000L
       |
-      |  val lpBox = CONTEXT.dataInputs(1)
+      |  val lpBox = CONTEXT.dataInputs(1) // to get the price
       |
-      |  val prevEpoch = SELF.R4[Coll[Long]].get(0)
+      |  val prevTime = SELF.R4[Coll[Long]].get(0)
       |  val frequency = SELF.R4[Coll[Long]].get(1)
+      |  val curTime = CONTEXT.preHeader.timestamp
+      |  val enoughTimePassed = curTime > prevTime + frequency
       |
       |  val auctionInfo = SELF.R5[Coll[Coll[Long]]].get
       |  val NFT = SELF.tokens(0)
       |  val coin = SELF.tokens(1)
       |  val coinId = coin._1
       |  val coinAm = coin._2
-      |  val currentTime = CONTEXT.preHeader.timestamp
       |
       |  val allOkay = auctionInfo.indices.forall({(ind: Int) => {
       |    val auction = auctionInfo(ind)
@@ -99,7 +101,7 @@ object Contracts {
       |    val aucOut = OUTPUTS(ind + 1)
       |    val rightContract = blake2b256(aucOut.propositionBytes) == AuctionContractHash
       |    val rightTokens = aucOut.tokens(1)._1 == coinId && aucOut.tokens(1)._2 == numToAuction
-      |    val aucSt = currentTime + HALFHOUR
+      |    val aucSt = curTime + HALFHOUR
       |    val aucEnd = aucSt + period
       |    val lpErg = lpBox.value
       |    val lpAcAm = lpBox.tokens(2)._2
@@ -123,13 +125,11 @@ object Contracts {
       |  val correctNFT = OUTPUTS(0).tokens(0) == NFT
       |  val correctCoin = OUTPUTS(0).tokens(1)._1 == coinId && OUTPUTS(0).tokens(1)._2 == coinAm - total
       |
-      |  val currentHeight = CONTEXT.preHeader.height
-      |  val periodReached = CONTEXT.preHeader.height >= prevEpoch + frequency
-      |  val rightRegisters = OUTPUTS(0).R4[Coll[Long]].get == Coll(prevEpoch + frequency, frequency) &&
+      |  val rightRegisters = OUTPUTS(0).R4[Coll[Long]].get == Coll(prevTime + frequency, frequency) &&
       |                       OUTPUTS(0).R5[Coll[Coll[Long]]] == SELF.R5[Coll[Coll[Long]]]
       |
       |  val allowAddingToken = {
-      |    val selfOut = OUTPUTS(1)
+      |    val selfOut = OUTPUTS(0)
       |    val okayTokens = selfOut.tokens(0) == NFT && selfOut.tokens(1)._1 == coinId && selfOut.tokens(1)._2 >= coinAm
       |    val keepRegisters = selfOut.R4[Coll[Long]].get == SELF.R4[Coll[Long]].get &&
       |                         selfOut.R5[Coll[Coll[Long]]].get == SELF.R5[Coll[Coll[Long]]].get
@@ -139,7 +139,7 @@ object Contracts {
       |  }
       |
       |  val rightLpBox = lpBox.tokens(2)._1 == CONFIG_LP
-      |  val startAuctions = rightLpBox && correctNFT && correctCoin && allOkay && rightRegisters && periodReached
+      |  val startAuctions = rightLpBox && correctNFT && correctCoin && allOkay && rightRegisters && enoughTimePassed
       |  sigmaProp(startAuctions || allowAddingToken)
       |}""".stripMargin
 
