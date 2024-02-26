@@ -25,7 +25,6 @@ object Contracts {
       |  val yRes = lpBox.value
       |  val xRes = lpBox.tokens(2)._2
       |  val feeCoef = lpBox.R4[Int].get
-      |  //val willGet = (xRes * fundInp * feeCoef) / (yRes * 1000L + fundInp * feeCoef)
       |  val willGet = (xRes.toBigInt * fundInp.toBigInt * feeCoef) / (yRes.toBigInt * 1000L + fundInp.toBigInt * feeCoef)
       |
       |  val rightOutAc = outAc.tokens(0)._1 == NFT && outAc.tokens(1)._2 >= ac._2 + willGet
@@ -58,7 +57,7 @@ object Contracts {
       |
       |  // we start decreasing price auction. The auction price will start from coef * LP price and will decrease to
       |  // LP price in the auction period. Coef could be set to 2 for example. This makes price discovery much easier!
-      |  // R5: Coll[Coll[Long]] - Auction info: [numCoinsToAuction, period, coef]
+      |  // R5: Coll[Coll[Long]] - Auction info: [numCoinsToAuction, period, coef, decrease_coef]
       |  val MaxMinerFee = MAX_MINER_FEE
       |  val auctionBoxInitialVal = AUC_BOX_INIT_VAL
       |
@@ -69,7 +68,7 @@ object Contracts {
       |
       |  val prevTime = SELF.R4[Coll[Long]].get(0) // last time we have started auctions
       |  val frequency = SELF.R4[Coll[Long]].get(1)
-      |  val enoughTimePassed = curTime > prevTime + frequency
+      |  val enoughTimePassed = curTime > prevTime
       |
       |  // list of auctions to start. for example we can start a batch of 5 auctions with different parameters every 3 days.
       |  val auctionInfo = SELF.R5[Coll[Coll[Long]]].get
@@ -83,7 +82,9 @@ object Contracts {
       |    val auction = auctionInfo(ind)
       |    val numToAuction = auction(0)
       |    val period = auction(1)
-      |    val coef = auction(2) // (coef is 1000 / actual coef)
+      |    // (coef and decrease_coef are (1000 / actual coef))
+      |    val coef = auction(2)
+      |    val decrease_coef = auction(3)
       |
       |    val aucOut = OUTPUTS.getOrElse(ind + 1, INPUTS(0))
       |    val rightContract = blake2b256(aucOut.propositionBytes) == AuctionContractHash
@@ -95,13 +96,14 @@ object Contracts {
       |    val lpAcAm = lpBox.tokens(2)._2
       |    val lpPrice = (lpErg / lpAcAm) * numToAuction
       |    val stPrice = (lpPrice * 1000) / coef
-      |    val numDecrease = period / HOUR
-      |    val amountDecrease = (stPrice - lpPrice) / numDecrease
+      |    val endPrice = (lpPrice * 1000) / decrease_coef
+      |    val numDecrease = period / HOUR - 1
+      |    val amountDecrease = (stPrice - endPrice) / numDecrease
       |
       |    val rightRegisters = blake2b256(aucOut.R4[Coll[Byte]].get) == BuyBackContractHash &&
-      |                           aucOut.R5[(Long, Long)].get._1 >= aucSt - HOUR / 2 && aucOut.R5[(Long, Long)].get._1 <= aucSt + HOUR / 2 &&
-      |                           aucOut.R5[(Long, Long)].get._2 >= aucEnd - HOUR / 2 && aucOut.R5[(Long, Long)].get._2 <= aucEnd + HOUR / 2 &&
-      |                           aucOut.R6[Coll[Long]].get == Coll(stPrice, -amountDecrease, HOUR) &&
+      |                           aucOut.R5[(Long, Long)].get._1 >= aucSt - HOUR && aucOut.R5[(Long, Long)].get._1 <= aucSt + HOUR &&
+      |                           aucOut.R5[(Long, Long)].get._2 >= aucEnd - HOUR && aucOut.R5[(Long, Long)].get._2 <= aucEnd + HOUR &&
+      |                           aucOut.R6[Coll[Long]].get == Coll(stPrice, amountDecrease, HOUR) &&
       |                           aucOut.R7[Coll[Byte]].get == Coll[Byte]()
       |    rightContract && rightTokens && rightRegisters && aucOut.value == auctionBoxInitialVal
       |  }})
@@ -128,7 +130,7 @@ object Contracts {
       |  val rightLpBox = lpBox.tokens(0)._1 == CONFIG_LP
       |  val minerFeeOkay = OUTPUTS(OUTPUTS.size - 1).value <= MaxMinerFee
       |  val startAuctions = rightLpBox && correctNFT && correctCoin && allOkay && rightRegisters &&
-      |                        enoughTimePassed && OUTPUTS.size == auctionInfo.size + 2 && minerFeeOkay
+      |                        enoughTimePassed && OUTPUTS.size == auctionInfo.size + 2 && minerFeeOkay && INPUTS.size == 1
       |  sigmaProp((startAuctions && sameScript) || (allowAddingToken))
       |}""".stripMargin
 
